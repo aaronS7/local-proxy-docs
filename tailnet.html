@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Hostname first. IP second. Existing access stays in your control."><meta name="color-scheme" content="dark">
+<title>Tailscale links · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html" aria-current="page">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">GUIDES <span>/</span> Tailscale links</div><h1>Your tailnet, clearly linked.</h1><p class="lead">Hostname first. IP second. Existing access stays in your control.</p><h2 id="enable">Enable link discovery</h2>
+<pre><code>./bin/localproxy discover --tailnet
+# Or, for an already running instance:
+./bin/localproxy reload --tailnet
+
+# Disable and persist that preference:
+./bin/localproxy reload --tailnet=false</code></pre>
+<p>The flag adds <strong>Tailnet hostname</strong> followed by <strong>Tailnet IP</strong>. It reads this machine’s Tailscale status, existing Serve configuration, and listening ports. Hostnames come from Tailscale status; see <a href="https://tailscale.com/docs/features/magicdns">Tailscale’s MagicDNS documentation</a> for name resolution.</p>
+<div class="callout"><p>Enable the setting with <code>discover</code>, <code>generate</code>, <code>start</code>, or <code>reload</code> before starting the UI. The current <code>ui --tailnet</code> invocation accepts the flag but does not apply it.</p></div>
+<h2 id="links">How URLs are chosen</h2>
+<div class="table-wrap"><table><thead><tr><th>Column</th><th>URL selection</th></tr></thead><tbody><tr><td>Hostname</td><td>An existing Tailscale Serve root proxy for this app, when found; otherwise the machine’s hostname at the original HTTP port.</td></tr><tr><td>IP</td><td>The Tailscale IPv4 address at the original HTTP port, with IPv6 as fallback.</td></tr></tbody></table></div>
+<p>An existing Serve HTTPS URL keeps its certified hostname. The IP column remains an HTTP URL at the original port, avoiding a hostname certificate mismatch on an IP address. Direct links without a detected matching listener appear as unavailable text. Firewall rules and tailnet access policies still determine whether detected listeners can be reached.</p>
+<h2 id="exposure">Display does not create access</h2>
+<p><code>--tailnet</code> does not change an app’s bind address, create a Serve entry, enable Funnel, or expose the local proxy. An app listening only at <code>127.0.0.1</code> remains local to this machine. An app must already have a suitable listener or Serve route for its displayed link to work remotely.</p>
+<p>The demo and screenshots keep tailnet discovery disabled for portability. They do not claim to verify another machine’s Tailscale access.</p>
+<h2 id="directory-access">Reach the directory remotely</h2>
+<p>Serving the directory to your tailnet is a separate setup step. The Go UI must bind to loopback. Use a dedicated Caddy server listening on the machine’s Tailscale IP whose only route proxies to that UI. Keep app routing on its original loopback listeners.</p>
+<p>For example, the directory-only server object in an instance-specific Caddy JSON config looks like this. Replace the example IP with your own Tailscale address and choose an available port:</p>
+<pre><code>{
+  "listen": ["100.101.102.103:18082"],
+  "routes": [{
+    "handle": [{
+      "handler": "reverse_proxy",
+      "upstreams": [{"dial": "127.0.0.1:18083"}]
+    }]
+  }],
+  "automatic_https": {"disable": true}
+}</code></pre>
+<p>This is a server object to merge under <code>apps.http.servers</code>, not a complete configuration or a CLI flag. Use <a href="directory.html#custom-instance">custom instance options</a> to preserve it during browser edits. Full CLI regeneration can replace manual additions. The directory-only route makes arbitrary paths reach the editor instead of app upstreams.</p>
+<p>Anyone allowed to reach this editable directory can rename apps. It has same-origin, Host, CSRF, and revision checks, but no separate user account system. Use your tailnet’s access controls to define who can reach it.</p>
+<h2 id="refresh">Refresh behavior</h2>
+<p>The static page refreshes its tailnet information when generated. The editable UI caches Tailscale lookups for 15 seconds and refreshes them on requests. A disconnected or unavailable daemon produces an explanatory status; local directory links remain available.</p>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="directory.html"><span>Previous</span>Discovery & editing <span aria-hidden="true">↗</span></a><a href="dns.html"><span>Next</span>DNS & HTTPS <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#enable">Enable link discovery</a><a href="#links">How URLs are chosen</a><a href="#exposure">Display does not create access</a><a href="#directory-access">Reach the directory remotely</a><a href="#refresh">Refresh behavior</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/tailnet.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

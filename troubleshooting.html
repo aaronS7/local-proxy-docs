@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Check DNS, TLS, routing, and the editor one layer at a time."><meta name="color-scheme" content="dark">
+<title>Troubleshooting · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html" aria-current="page">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">PROJECT <span>/</span> Troubleshooting</div><h1>Follow the request.</h1><p class="lead">Check DNS, TLS, routing, and the editor one layer at a time.</p><h2 id="resolve">The domain does not resolve</h2>
+<p>Registering a name does not configure your resolver. Check <code>getent hosts app.test</code> or the name under your chosen suffix. It must resolve to loopback for local app routes. Use the quickstart’s <code>curl --resolve</code> command to test routing independently. Check whether browser DNS-over-HTTPS bypasses the local resolver.</p>
+<h2 id="tls">HTTPS reports a certificate error</h2>
+<p>Distinguish an untrusted issuer from a hostname mismatch. Use the instance’s generated <code>root.crt</code> with <code>--cacert</code> to test trust. If the error says <code>app.test</code> does not match <code>*.test</code> in curl/Python, use the <a href="dns.html#compatibility">documented .dev.test workaround</a>. Installing the root again will not change hostname matching.</p>
+<h2 id="upstream">A registered app fails</h2>
+<p>Open its original <code>http://localhost:&lt;port&gt;</code> link. Confirm the app accepts IPv4 loopback connections and its port matches the registry. If it rejects the custom hostname, allow that hostname in the app or set the route’s <code>localhost_host</code> option and reload. App 404s and upstream failures are not replaced with the directory.</p>
+<h2 id="fallback">An unknown name gets 403</h2>
+<p>The editable directory restricts Host headers. Use an unregistered single-label name under your configured suffix, such as <code>missing.dev.test</code>, or the machine’s recognized local/Tailscale address. Arbitrary external Host headers are rejected. Static and editable fallback have different Host behavior.</p>
+<h2 id="editor">Editing is missing or fails</h2>
+<p>Check that <code>directory_address</code> is configured, the UI process is listening at that address, and Caddy has reloaded it. The static directory has no editing controls. For an instance-specific admin port, pass <code>--proxy-admin</code>; use <code>--proxy-config</code> to retain its restart snapshot.</p>
+<p>Refresh after a revision conflict. If Caddy rejects a browser edit, inspect its logs before retrying. If a CLI command reports a failed reload, its registry change may already be saved; correct the failure and reload. Do not assume the directory confirms active upstream health.</p>
+<h2 id="file">The map or rename seems ignored</h2>
+<p>Overrides outrank map entries. Check <code>name_source</code> and <code>project_file</code> in the registry. If both <code>proxy.yaml</code> and <code>proxy.json</code> exist, choose one using <code>-file</code> before the command. Run CLI commands from a directory without an unrelated map, or select the intended file explicitly. File edits need a reload.</p>
+<h2 id="tailnet">Tailnet links are unavailable</h2>
+<p>Enable the saved setting with <code>reload --tailnet</code>, rather than <code>ui --tailnet</code>. Check <code>tailscale status</code> and whether the app already has a suitable listener or Serve endpoint. A localhost-only app cannot be reached at the machine’s Tailscale IP just because a link is displayed. Check access rules and firewalls from the other device.</p>
+<h2 id="ports">Startup says a port is in use</h2>
+<p>Inspect <code>ss -ltnp</code>. Give each instance distinct HTTP, HTTPS, admin, and UI ports; keep app ports separate from these. Use high ports for an unprivileged test. The <a href="quickstart.html">demo script</a> chooses available ports and avoids your normal registry.</p>
+<h2 id="docs">The docs preview is not running</h2>
+<pre><code>python3 scripts/build-docs.py
+python3 scripts/serve-docs.py --port 18084</code></pre>
+<p>Open <code>http://127.0.0.1:18084</code>. Search loads a local JSON file, so serve the site over HTTP rather than opening HTML directly from disk. No backend API, CDN, font service, or external JavaScript is needed.</p>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="review.html"><span>Previous</span>Code review <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#resolve">The domain does not resolve</a><a href="#tls">HTTPS reports a certificate error</a><a href="#upstream">A registered app fails</a><a href="#fallback">An unknown name gets 403</a><a href="#editor">Editing is missing or fails</a><a href="#file">The map or rename seems ignored</a><a href="#tailnet">Tailnet links are unavailable</a><a href="#ports">Startup says a port is in use</a><a href="#docs">The docs preview is not running</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/troubleshooting.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

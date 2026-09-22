@@ -1,0 +1,84 @@
+{
+  "url": "http://127.0.0.1:18084/",
+  "pages": [
+    {
+      "page": "index.html",
+      "title": "Overview · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "quickstart.html",
+      "title": "Quickstart · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "configuration.html",
+      "title": "Configuration · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "directory.html",
+      "title": "Discovery & editing · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "tailnet.html",
+      "title": "Tailscale links · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "dns.html",
+      "title": "DNS & HTTPS · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "cli.html",
+      "title": "CLI reference · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "architecture.html",
+      "title": "How it works · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "verification.html",
+      "title": "Verification · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "review.html",
+      "title": "Code review · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    },
+    {
+      "page": "troubleshooting.html",
+      "title": "Troubleshooting · Localproxy docs",
+      "desktop": true,
+      "mobile": true
+    }
+  ],
+  "checks": [
+    "desktop and mobile layouts",
+    "image loading and alt text",
+    "page headings and current navigation",
+    "keyboard search",
+    "no-results search",
+    "Escape closes search",
+    "code copy control",
+    "mobile navigation and Escape",
+    "navigation stays under site prefix"
+  ],
+  "errors": [],
+  "failed": []
+}

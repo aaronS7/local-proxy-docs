@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Discover HTTP services, find their addresses, and edit names in the browser."><meta name="color-scheme" content="dark">
+<title>Discovery & editing · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html" aria-current="page">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">GUIDES <span>/</span> Discovery & editing</div><h1>Every app, in one place.</h1><p class="lead">Discover HTTP services, find their addresses, and edit names in the browser.</p><h2 id="discover">Find listening HTTP apps</h2>
+<pre><code>./bin/localproxy discover
+./bin/localproxy list
+./bin/localproxy rename curious-otter studio</code></pre>
+<p>The last command is illustrative: replace <code>curious-otter</code> with a name from your actual listing. Discovery inspects TCP listeners with <code>ss</code> and probes IPv4 localhost with HTTP HEAD. Any valid HTTP response qualifies, including 401, 404, or a redirect. Redirects are not followed.</p>
+<p>It skips ports below 1024, its proxy/admin/editor ports, and already registered or suppressed ports. Probes use a two-second timeout and up to eight concurrent requests. HTTPS-only and IPv6-only upstreams are not discovered. This is a manual scan; stopped apps are not automatically removed.</p>
+<h2 id="enable-editor">Enable the editor</h2>
+<p>Set <code>directory_address</code> in the registry to <code>127.0.0.1:18083</code>, then start the backend in a separate terminal:</p>
+<pre><code>./bin/localproxy -config /absolute/path/routes.json ui \
+  --listen 127.0.0.1:18083</code></pre>
+<p>Reload a running proxy with the same registry, or start it:</p>
+<pre><code>./bin/localproxy -config /absolute/path/routes.json reload
+# If Caddy is stopped, use start instead of reload.</code></pre>
+<p>The UI process must remain running. Without <code>directory_address</code>, generated Caddy pages provide a static directory with no edit controls. The editor itself accepts loopback listeners only.</p>
+<h2 id="editing">Edit, confirm, undo</h2>
+<p><a href="index.html#demo">Watch the recorded workflow</a>, including a real rename and Undo.</p>
+<ol><li>Search by name or port. Press <kbd>/</kbd> to focus search.</li><li>Choose <strong>Edit</strong> and enter the new name.</li><li>Choose <strong>Save</strong> or press Enter to review the old and new domains.</li><li>Confirm <strong>Rename app</strong>. Use <strong>Undo</strong> in the success message if needed.</li></ol>
+<p>Escape cancels an edit. Invalid, duplicate, and reserved names are rejected. A revision token prevents stale browser edits from overwriting a newer change. If a conflict occurs, refresh and try again.</p>
+<figure><a href="assets/screenshots/directory-edit.png"><img src="assets/screenshots/directory-edit.png" alt="Inline name editor for app.test, with storefront entered and Save and Cancel controls" loading="lazy"></a><figcaption>Enter a short name; the domain suffix and original localhost port stay visible.</figcaption></figure>
+<figure><a href="assets/screenshots/directory-confirmation.png"><img src="assets/screenshots/directory-confirmation.png" alt="Actual rename confirmation showing old app.test name and proposed storefront.test name" loading="lazy"></a><figcaption>The confirmation previews the name change before submitting it. Capture uses the default .test suffix.</figcaption></figure>
+<p>A successful browser rename applies Caddy routes before reporting success and persists the override. The UI attempts rollback if later file persistence fails. Ambiguous network failures and rollback failures still need operator attention; this is not a multi-system transaction guarantee.</p>
+<h2 id="fallback">What the fallback means</h2>
+<p>Registered app requests go to their original localhost ports. Their own 404 responses remain 404s. A registered app that stops returns an upstream error; the directory is a list of registrations, not a health monitor.</p>
+<p>Unregistered names under the configured suffix and the reserved <code>home</code> name open the directory, including deep paths. In editable mode, the Host check allows localhost, configured single-label local names, and this machine’s known Tailscale addresses. An unrelated hostname receives 403. The static fallback has no equivalent Host check.</p>
+<p>DNS must first send the request to this proxy. A fallback cannot intercept arbitrary domains on the Internet. HTTPS also needs a certificate the client accepts for the requested hostname.</p>
+<h2 id="mobile">On a smaller screen</h2>
+<figure class="mobile"><a href="assets/screenshots/directory-mobile.png"><img src="assets/screenshots/directory-mobile.png" alt="Actual mobile directory with app cards, local domains, localhost links, and Edit controls" loading="lazy"></a><figcaption>The same directory becomes stacked cards on mobile.</figcaption></figure>
+<h2 id="custom-instance">A custom Caddy instance</h2>
+<pre><code>./bin/localproxy -config /absolute/path/routes.json ui \
+  --listen 127.0.0.1:18083 \
+  --proxy-admin 127.0.0.1:2022 \
+  --proxy-config /absolute/path/instance/caddy.json</code></pre>
+<p>Use this when the running Caddy instance has a different admin endpoint or config path. UI edits preserve custom listeners and a separate directory server. Ordinary CLI reloads regenerate the standard servers; do not assume they preserve hand-edited Caddy configuration.</p>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="configuration.html"><span>Previous</span>Configuration <span aria-hidden="true">↗</span></a><a href="tailnet.html"><span>Next</span>Tailscale links <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#discover">Find listening HTTP apps</a><a href="#enable-editor">Enable the editor</a><a href="#editing">Edit, confirm, undo</a><a href="#fallback">What the fallback means</a><a href="#mobile">On a smaller screen</a><a href="#custom-instance">A custom Caddy instance</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/directory.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

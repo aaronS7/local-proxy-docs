@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Commands, flags, and the files they read and write."><meta name="color-scheme" content="dark">
+<title>CLI reference · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html" aria-current="page">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">REFERENCE <span>/</span> CLI reference</div><h1>A small command surface.</h1><p class="lead">Commands, flags, and the files they read and write.</p><h2 id="syntax">Invocation</h2>
+<pre><code>localproxy [-config routes.json] [-file proxy.yaml|proxy.json] [--tailnet] &lt;command&gt;</code></pre>
+<p>Examples use <code>./bin/localproxy</code> when running from a source checkout. <code>-config</code> and <code>-file</code> go before the command. <code>--tailnet</code> is normalized so it can appear before or after a command; use <code>--tailnet=false</code> to disable it.</p>
+<h2 id="commands">Commands</h2>
+<div class="table-wrap"><table><thead><tr><th>Command</th><th>Effect</th></tr></thead><tbody>
+<tr><td><code>add &lt;name&gt; &lt;port&gt;</code></td><td>Register or update a manual name; replace another name for that port and clear its suppression.</td></tr>
+<tr><td><code>rename &lt;old&gt; &lt;new&gt;</code></td><td>Persist an override for an existing route without changing its port.</td></tr>
+<tr><td><code>remove &lt;name&gt;</code></td><td>Remove the registration and suppress its port from maps and discovery.</td></tr>
+<tr><td><code>discover</code></td><td>Scan listening HTTP ports and persist random names for new apps.</td></tr>
+<tr><td><code>lookup &lt;port|localhost-url&gt;</code></td><td>Print the registered domain for a localhost port. Supports text, JSON and YAML.</td></tr>
+<tr><td><code>list</code></td><td>Print merged names and localhost URLs, or a JSON/YAML array. Does not probe app health or apply routes.</td></tr>
+<tr><td><code>config [export]</code></td><td>Export the full merged Local Proxy configuration as JSON or YAML, to stdout or a file.</td></tr>
+<tr><td><code>generate</code></td><td>Read the project map, save the registry, and write Caddy JSON. Does not start or reload Caddy.</td></tr>
+<tr><td><code>start</code></td><td>Generate configuration and start Caddy in the background.</td></tr>
+<tr><td><code>run</code></td><td>Generate configuration and run Caddy in the foreground.</td></tr>
+<tr><td><code>reload</code></td><td>Re-read project defaults, generate configuration, and ask the configured Caddy admin endpoint to load it.</td></tr>
+<tr><td><code>stop</code></td><td>Stop Caddy through the registry’s admin endpoint.</td></tr>
+<tr><td><code>trust</code></td><td>Invoke Caddy’s trust command for this instance’s local CA; may require system permission.</td></tr>
+<tr><td><code>ui</code></td><td>Run the editable directory backend. Does not start Caddy.</td></tr>
+<tr><td><code>agents [print | install]</code></td><td>Print bundled CLI instructions, or preview and confirm a managed section in AGENTS.md. No registry or Caddy access.</td></tr>
+<tr><td><code>skill [print | install]</code></td><td>Print the Local Proxy skill, or preview and confirm installation of SKILL.md. No registry or Caddy access.</td></tr>
+</tbody></table></div>
+<p>Route mutations regenerate configuration and reload when the configured admin endpoint responds. CLI reload failures can leave saved changes unapplied; see <a href="review.html#saved-routes">the failure mode</a>.</p>
+<h2 id="lookup">Lookup and machine-readable output</h2>
+<pre><code>./bin/localproxy lookup 3000
+./bin/localproxy lookup http://localhost:3000/path
+./bin/localproxy lookup localhost:3000 --json
+./bin/localproxy lookup 'http://[::1]:3000' --format yaml
+./bin/localproxy list --json</code></pre>
+<p>Default lookup output is one domain and a newline, for example <code>app.test</code>. HTTP(S) URLs must use <code>localhost</code> or a loopback IP. A URL without an explicit port uses 80 for HTTP or 443 for HTTPS. Paths, queries and fragments are ignored. Credentials, remote hosts, unsupported schemes and invalid ports are rejected. Lookup does not resolve DNS or contact the app.</p>
+<p>Both <code>lookup</code> and <code>list</code> accept <code>--format text|json|yaml</code>, <code>--json</code>, or <code>--yaml</code>. Choose one format flag; it can appear before or after the lookup input. Global <code>-config</code> and <code>-file</code> still go before the command.</p>
+<p>Example JSON for an app registered on port 3000:</p>
+<pre><code>{
+  "domain": "app.test",
+  "port": 3000,
+  "localhost_url": "http://localhost:3000",
+  "http_url": "http://app.test",
+  "https_url": "https://app.test",
+  "name_source": "override"
+}</code></pre>
+<p>Lookup produces one object. List produces an array sorted by domain, including <code>[]</code> when there are no routes. YAML has the same fields and types as JSON. Proxy URLs include the registry's non-default HTTP and HTTPS listener ports; the lookup's plain domain output never includes a port. <code>name_source</code> is <code>override</code>, <code>file</code>, <code>discovered</code>, or an empty string for an unlabeled legacy entry.</p>
+<pre><code>domain=$(./bin/localproxy lookup 3000)
+./bin/localproxy lookup 3000 --json | jq -r '.https_url'
+./bin/localproxy list --json | jq -r '.[].domain'</code></pre>
+<p>Both queries read the same merged configuration, including project defaults, manual overrides and suppressed ports. They do not write files, start Caddy or prove that saved routes are running. Missing matches, multiple domains on one port, invalid options and configuration errors exit with status 1, diagnostics on stderr and empty stdout. Help exits with status 0. No match is never silently assigned a new name.</p>
+<h2 id="config-export">Export configuration</h2>
+<pre><code>./bin/localproxy config export
+./bin/localproxy config export --format yaml
+./bin/localproxy config export -o snapshot.yaml
+./bin/localproxy config export --json --output snapshot.json
+./bin/localproxy config export --yaml -o -</code></pre>
+<p><code>config</code> alone is shorthand for <code>config export</code>. The default is JSON on stdout. <code>--format json|yaml</code>, <code>--json</code>, and <code>--yaml</code> select the format; choose one. <code>-o FILE</code> and <code>--output FILE</code> choose the destination, with <code>-</code> meaning stdout. These flags go after <code>config export</code>; global <code>-config</code> and <code>-file</code> go before <code>config</code>.</p>
+<div class="table-wrap"><table><thead><tr><th>Selection</th><th>Result</th></tr></thead><tbody>
+<tr><td>No format or output flags</td><td>JSON on stdout</td></tr>
+<tr><td><code>-o snapshot.yaml</code> or <code>-o snapshot.yml</code></td><td>YAML inferred from the filename, case-insensitively</td></tr>
+<tr><td><code>-o snapshot.json</code>, another extension, or no extension</td><td>JSON</td></tr>
+<tr><td><code>--format yaml -o snapshot.json</code></td><td>Explicit YAML wins over the extension</td></tr>
+<tr><td><code>--yaml -o -</code></td><td>YAML on stdout</td></tr>
+</tbody></table></div>
+<p>The export contains the complete effective registry after project-map merging: listener ports, suffix, route names and sources, Host overrides, suppressed ports, selected project file, directory backend, and the persisted tailnet setting. Routes are sorted by domain and suppressed ports numerically. Optional default fields are omitted, as in the registry schema; an empty route list is <code>[]</code>.</p>
+<p>Export reads configuration without contacting Caddy, probing apps or Tailscale, or writing runtime state. It does not prove that Caddy has applied the configuration. JSON can be read again with <code>-config</code>; YAML has matching field names for other tools, but <code>-config</code> still accepts only JSON. This full configuration is different from a flat <code>proxy.yaml</code> project map. The selected <code>project_file</code> path is retained; transferring the export to another machine also requires handling that dependency.</p>
+<p>File output leaves stdout empty, replaces regular files atomically, preserves existing permissions, and creates new files with mode <code>0600</code>. Parent directories must exist. Export refuses to overwrite the input registry or selected project map, including file aliases, and rejects symlink or nonregular destinations. Invalid configuration or options leave existing output untouched; errors go to stderr and exit nonzero.</p>
+<pre><code>./bin/localproxy -config /path/to/routes.json -file /path/to/proxy.yaml \
+  config export --format yaml --output snapshot.yaml
+./bin/localproxy config export --yaml &gt; snapshot.yaml</code></pre>
+<p>With shell redirection, the shell truncates the destination before the CLI runs. Use <code>--output</code> when replacing a file to retain the export command's validation and atomic replacement behavior.</p>
+<h2 id="agent-instructions">Agent instructions and skill</h2>
+<p>Both command groups default to <code>print</code>. Output is plain Markdown on stdout, suitable for reading or piping into another tool. Printing does not read the registry, inspect project maps, contact Caddy, or write files.</p>
+<pre><code>./bin/localproxy agents
+./bin/localproxy agents print
+./bin/localproxy skill print</code></pre>
+<p>Installation previews the destination and proposed content on stderr, then asks for confirmation. Answer <code>y</code> or <code>yes</code> to apply it. A negative response, blank response, or end of input makes no change. Use <code>--yes</code> only after authorizing the edit, for scripts or automation.</p>
+<pre><code>./bin/localproxy agents install
+./bin/localproxy agents install --path /path/to/project/AGENTS.md
+./bin/localproxy skill install
+./bin/localproxy skill install --path .agents/skills/local-proxy
+
+# Explicit approval for a scripted installation:
+./bin/localproxy agents install --path /path/to/project/AGENTS.md --yes</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Option</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>agents install --path FILE</code></td><td>Defaults to AGENTS.md in the current directory, or an existing lowercase agents.md when uppercase is absent. If both exist, select one explicitly.</td></tr>
+<tr><td><code>skill install --path DIRECTORY</code></td><td>Writes SKILL.md inside this directory. Defaults to $CODEX_HOME/skills/local-proxy, or ~/.codex/skills/local-proxy when CODEX_HOME is unset.</td></tr>
+<tr><td><code>--yes</code></td><td>Explicitly approve installation without prompting. The content preview still appears.</td></tr>
+<tr><td><code>--help</code></td><td>Show command-group or install usage.</td></tr>
+</tbody></table></div>
+<p>The AGENTS installer appends or updates the section between <code>&lt;!-- localproxy:begin --&gt;</code> and <code>&lt;!-- localproxy:end --&gt;</code>. Surrounding instructions and existing file permissions are preserved. Identical installs do nothing. Malformed or duplicate markers, symlink destinations, and edits detected during confirmation fail without replacing the file.</p>
+<p>The skill installer replaces only its destination SKILL.md after confirmation and preserves other files in the skill directory. Use <code>$local-proxy</code> in a new agent session after installation. Both instruction documents are embedded in the binary, so no network or source checkout is required. Avoid redirecting printed output over existing instruction files; installation handles preservation and confirmation.</p>
+<h2 id="ui-options">Editor options</h2>
+<pre><code>./bin/localproxy -config /path/to/routes.json ui \
+  --listen 127.0.0.1:18083 \
+  --proxy-admin 127.0.0.1:2021 \
+  --proxy-config /path/to/.local/caddy.json</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Option</th><th>Default / purpose</th></tr></thead><tbody><tr><td><code>--listen</code></td><td><code>127.0.0.1:18083</code>. Must use a loopback IP.</td></tr><tr><td><code>--proxy-admin</code></td><td>Registry admin port on loopback. Selects the Caddy instance to update.</td></tr><tr><td><code>--proxy-config</code></td><td>Optional path to an instance-specific config snapshot to update for restarts.</td></tr></tbody></table></div>
+<p><code>ui --tailnet</code> currently has no effect. Persist the option with <code>reload --tailnet</code> or <code>generate --tailnet</code> first. <code>-file</code> is also not applied by the early UI dispatch; establish the selected map with a generating command before starting the UI.</p>
+<h2 id="files">Files and defaults</h2>
+<div class="table-wrap"><table><thead><tr><th>Setting</th><th>Default</th></tr></thead><tbody><tr><td>Registry</td><td><code>routes.json</code> in the current directory</td></tr><tr><td>Suffix</td><td><code>test</code></td></tr><tr><td>HTTP / HTTPS ports</td><td><code>80</code> / <code>443</code></td></tr><tr><td>Caddy admin endpoint</td><td><code>127.0.0.1:2021</code></td></tr><tr><td>Generated JSON</td><td><code>.local/caddy.json</code>, alongside the registry</td></tr><tr><td>Local CA data</td><td><code>.local/caddy-data</code>, alongside the registry</td></tr><tr><td>Registry lock</td><td><code>.local/registry.lock</code>, alongside the registry</td></tr></tbody></table></div>
+<p>The executable lookup order is <code>CADDY_BIN</code>, a <code>caddy</code> executable on PATH, then <code>caddy</code> beside the localproxy binary. The existing Go integration test specifically needs <code>bin/caddy</code>.</p>
+<h2 id="examples">Common sequences</h2>
+<pre><code>./bin/localproxy add app 3000
+./bin/localproxy add api 8080
+./bin/localproxy rename app studio
+./bin/localproxy list
+./bin/localproxy remove api</code></pre>
+<p>These commands use the current registry and can reload its running Caddy instance. Use the <a href="quickstart.html">isolated demo</a> to experiment with a disposable registry first.</p>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="dns.html"><span>Previous</span>DNS & HTTPS <span aria-hidden="true">↗</span></a><a href="architecture.html"><span>Next</span>How it works <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#syntax">Invocation</a><a href="#commands">Commands</a><a href="#lookup">Lookup and machine-readable output</a><a href="#config-export">Export configuration</a><a href="#agent-instructions">Agent instructions and skill</a><a href="#ui-options">Editor options</a><a href="#files">Files and defaults</a><a href="#examples">Common sequences</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/cli.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

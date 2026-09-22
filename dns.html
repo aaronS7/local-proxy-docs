@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Understand name resolution, certificate trust, and machine setup."><meta name="color-scheme" content="dark">
+<title>DNS & HTTPS · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html" aria-current="page">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">GUIDES <span>/</span> DNS & HTTPS</div><h1>Make .test feel local.</h1><p class="lead">Understand name resolution, certificate trust, and machine setup.</p><h2 id="names">Choose a local suffix</h2>
+<p>Localhost is not the only name you can use. Localproxy defaults to <code>.test</code>, which is reserved for testing by <a href="https://www.rfc-editor.org/rfc/rfc2606.html">RFC 2606</a>. A suffix such as <code>dev.test</code> works too. Set the registry’s <code>suffix</code> before creating routes, and configure your resolver for that suffix.</p>
+<p>The reserved directory name is <code>home.&lt;suffix&gt;</code>. App names have one label before the suffix. The generated certificate covers that suffix and its wildcard.</p>
+<h2 id="compatibility">Certificate compatibility</h2>
+<div class="callout warning"><p>Current limitation: the default <code>*.test</code> certificate passes this project’s Go TLS tests, but curl/Python clients using OpenSSL reject it for <code>app.test</code> because of their wildcard hostname rules. Trusting the CA does not fix a hostname mismatch.</p></div>
+<p>The isolated HTTPS example uses suffix <code>dev.test</code> and certificate <code>*.dev.test</code>, which the verifier checks with hostname and chain verification enabled. This is a workaround using existing configuration, not an application fix. Browser compatibility should be tested in the actual browser and trust store you use; HTTP screenshots do not verify HTTPS behavior.</p>
+<h2 id="no-install">Test without installing anything</h2>
+<p>The <a href="quickstart.html#requests">quickstart</a> uses curl’s <code>--resolve</code> and <code>--cacert</code>. These choose a loopback address and CA for one command, without changing DNS or system trust. Use this path to separate routing failures from machine setup problems.</p>
+<h2 id="system-setup">Arch / Omarchy setup</h2>
+<p>The included setup script targets Arch/Omarchy with systemd-resolved and the default <code>.test</code> suffix. It installs a dedicated dnsmasq service, routes <code>~test</code> lookups to it, trusts this instance’s CA, and gives <code>bin/caddy</code> permission to bind ports 80 and 443. It is not a generic Linux or macOS installer.</p>
+<p>For a registry using the default suffix and ports, first generate the config and provision the CA via Caddy validation:</p>
+<pre><code>./bin/localproxy generate
+./bin/caddy validate --config .local/caddy.json
+sudo bash scripts/install-system.sh "$PWD"</code></pre>
+<p>Read <a href="https://github.com/aaronS7/local-proxy/blob/main/scripts/install-system.sh">the script</a> before running it. It expects the local CA root file to exist. It starts Caddy directly unless an existing localproxy user service is present. Its final curl HTTPS check can hit the default-suffix compatibility issue described above; the machine changes occur before that check.</p>
+<p>The script is written for <code>.test</code> and its verification URL is <code>home.test</code>. With a different suffix, configure and verify your resolver separately. DNS-over-HTTPS in the browser may need an exception for local names. Browser-specific certificate stores may need the root imported separately.</p>
+<h2 id="trust">Keep local trust local</h2>
+<p>Generated CA data lives at <code>.local/caddy-data</code> beside the registry. The public root is <code>pki/authorities/local/root.crt</code> beneath that directory. The directory also holds the CA’s private key and should remain private and untracked.</p>
+<p>After replacing <code>bin/caddy</code>, reapply any file capability needed for privileged ports. Generated listeners bind to IPv4 and IPv6 loopback; upstream connections use IPv4 loopback.</p>
+<h2 id="remove">Stop and remove setup</h2>
+<p>Use <code>localproxy stop</code> for a manually started instance. If a user service manages it, use <code>systemctl --user disable --now localproxy.service</code> so its restart policy does not bring it back. The <a href="https://github.com/aaronS7/local-proxy/blob/main/README.md#stop-or-remove-machine-setup">repository removal guide</a> lists DNS, trust, and capability cleanup.</p>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="tailnet.html"><span>Previous</span>Tailscale links <span aria-hidden="true">↗</span></a><a href="cli.html"><span>Next</span>CLI reference <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#names">Choose a local suffix</a><a href="#compatibility">Certificate compatibility</a><a href="#no-install">Test without installing anything</a><a href="#system-setup">Arch / Omarchy setup</a><a href="#trust">Keep local trust local</a><a href="#remove">Stop and remove setup</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/dns.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

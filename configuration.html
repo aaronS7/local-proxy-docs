@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Project defaults, persistent overrides, and predictable precedence."><meta name="color-scheme" content="dark">
+<title>Configuration · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html" aria-current="page">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">GUIDES <span>/</span> Configuration</div><h1>Names that stay yours.</h1><p class="lead">Project defaults, persistent overrides, and predictable precedence.</p><h2 id="project-map">A project map</h2>
+<p>Put a flat name-to-port map in <code>proxy.yaml</code>:</p>
+<pre><code>app: 3000
+api: 8080</code></pre>
+<p>Or use <code>proxy.json</code>:</p>
+<pre><code>{
+  "app": 3000,
+  "api": 8080
+}</code></pre>
+<p>Short names gain the configured suffix. Full names under that suffix also work. Ports must be integers and each port must have one name in the map. Use <code>{}</code> for an empty map. Keep one format in a directory; if both exist, select one explicitly on each CLI command that reads the map.</p>
+<pre><code>./bin/localproxy -file proxy.yaml generate
+./bin/localproxy -file proxy.json generate</code></pre>
+<h2 id="precedence">Naming precedence</h2>
+<div class="table-wrap"><table><thead><tr><th>Priority</th><th>Name source</th><th>How it changes</th></tr></thead><tbody><tr><td>1</td><td>CLI / UI override</td><td><code>add</code>, <code>rename</code>, or browser edit</td></tr><tr><td>2</td><td>Project file</td><td>Edit the map and run <code>reload</code></td></tr><tr><td>3</td><td>Discovery</td><td>Random name when a new HTTP port is found</td></tr></tbody></table></div>
+<pre><code>./bin/localproxy rename app studio
+./bin/localproxy reload
+# studio.test keeps its name, even if the map still says app.</code></pre>
+<p>The project map is never rewritten. <code>remove</code> records a suppressed port, so discovery and the map do not immediately restore it. Use <code>add &lt;name&gt; &lt;port&gt;</code> to restore it. Deleting a map entry removes that file-managed route on reload, while overrides and unrelated discovered routes remain.</p>
+<p>There is no reset-override command yet. To return a route to its file default, stop concurrent writers, remove that route’s <code>name_source: "override"</code> field in the registry, and reload.</p>
+<h2 id="selection">Which file gets read?</h2>
+<ol><li>An explicit <code>-file</code> path, when given.</li><li>A map in the current working directory.</li><li>The remembered absolute project-file path.</li><li>A map next to the registry.</li></ol>
+<p>A missing remembered file or invalid map causes an error. Files are not watched. The UI reads the map on requests, so it can display an edited default before Caddy has applied it; run <code>reload</code> after changing the file.</p>
+<h2 id="registry">The persistent registry</h2>
+<p><code>routes.json</code> stores proxy settings, registrations, name sources, and the selected project file. Use <code>-config</code> before the command to select a different registry. This example uses high ports and enables the editor backend:</p>
+<pre><code>{
+  "suffix": "dev.test",
+  "http_port": 18081,
+  "https_port": 18443,
+  "admin_port": 2021,
+  "directory_address": "127.0.0.1:18083",
+  "tailnet": false,
+  "routes": [
+    {"domain": "app.dev.test", "port": 3000}
+  ]
+}</code></pre>
+<p>Reserve distinct, available HTTP, HTTPS, admin, and editor ports. App ports cannot use those ports. Upstreams must accept connections at <code>127.0.0.1:&lt;port&gt;</code>. The suffix can contain several labels, but each app gets exactly one label before it: <code>app.dev.test</code> works for suffix <code>dev.test</code>; <code>branch.app.dev.test</code> does not.</p>
+<p>To inspect or save this registry after applying project-map precedence, run <code>localproxy config export</code> (JSON on stdout), or <code>localproxy config export -o snapshot.yaml</code> (YAML file). See <a href="cli.html#config-export">configuration export</a> for format flags, file handling, and portability details.</p>
+<h2 id="host-header">Apps with Host checks</h2>
+<p>By default, Caddy preserves the incoming hostname. If an app only accepts localhost, add <code>"localhost_host": true</code> to its registry route and reload. Caddy then sends <code>Host: localhost:&lt;port&gt;</code>. Renaming preserves this setting.</p>
+<div class="callout warning"><p>CLI writes and Caddy reloads are separate steps. A failed CLI reload can leave the new registry saved while old routes still run. Fix the reported problem and retry <code>reload</code>. See the <a href="review.html">code review</a>.</p></div>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="quickstart.html"><span>Previous</span>Quickstart <span aria-hidden="true">↗</span></a><a href="directory.html"><span>Next</span>Discovery & editing <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#project-map">A project map</a><a href="#precedence">Naming precedence</a><a href="#selection">Which file gets read?</a><a href="#registry">The persistent registry</a><a href="#host-header">Apps with Host checks</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/configuration.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Working examples, real captures, tests, and measured performance."><meta name="color-scheme" content="dark">
+<title>Verification · Localproxy docs</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css"><script src="assets/site.js" defer></script></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">↳</span>localproxy<span class="docs-label">/ docs</span></a>
+<button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
+<a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
+<button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html" aria-current="page">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<main id="main"><div class="eyebrow">PROJECT <span>/</span> Verification</div><h1>Evidence you can rerun.</h1><p class="lead">Working examples, real captures, tests, and measured performance.</p><h2 id="status">Verification snapshot</h2>
+<p>Checked on September 22, 2026, on Linux/amd64 with Go 1.27.1 and Caddy 2.11.4. The code review pins the application source to commit <code>4868827</code>. Documentation scripts and captures are stored alongside these pages.</p>
+<div class="table-wrap"><table><thead><tr><th>Evidence</th><th>What it verifies</th></tr></thead><tbody><tr><td>19 example checks</td><td>Real Caddy, HTTP, strict HTTPS with .dev.test, project files, edits, conflicts, and teardown</td></tr><tr><td>Go race tests + vet</td><td>Application suite, including real Caddy integration when bin/caddy exists</td></tr><tr><td>Four browser captures</td><td>Real directory, inline editor, confirmation, and mobile layout</td></tr><tr><td>Site browser checks</td><td>Navigation, search, copy, images, mobile layout, and browser errors</td></tr><tr><td>Code review</td><td>Four reproduced limitations and their documentation consequences</td></tr></tbody></table></div>
+<p><a href="evidence/examples.json">Read the example run’s JSON evidence</a>, <a href="evidence/quickstart.json">the exact quickstart checks</a>, <a href="evidence/site.json">the site browser report</a>, <a href="review.html">review the findings</a>, or <a href="screenshots.md">inspect screenshot provenance</a>. A passing fixture does not establish system DNS, browser trust, or access from another tailnet device.</p>
+<h2 id="examples">Rerun working examples</h2>
+<pre><code>go build -o bin/localproxy .
+python3 scripts/verify-docs-example.py \
+  --output .local/docs-evidence/examples.json</code></pre>
+<p>The helper starts temporary app and Caddy processes on available high loopback ports. It verifies both certificate-chain and hostname checks using the generated CA and suffix <code>dev.test</code>. It checks that successful edits change running routes and that a stale revision is rejected. Its final check confirms process and temporary-directory cleanup.</p>
+<h2 id="tests">Run the application suite</h2>
+<pre><code>go test -race -count=1 ./...
+go vet ./...</code></pre>
+<p>Put Caddy at <code>bin/caddy</code> to run the existing real-proxy integration test. Without it, that test skips even if Caddy exists elsewhere on PATH. The suite checks HTTP routing, Go-verified HTTPS, unknown-name fallback, upstream 404s, map precedence, conflicting edits, malformed requests, rollback, and custom listener preservation.</p>
+<h2 id="screenshots">Reproduce the screenshots</h2>
+<p>The PNGs are captures of the actual application, not mockups. Capture uses default <code>.test</code> over HTTP with two fixture apps and no tailnet links. Port numbers vary. The helper opens an edit confirmation and cancels; it asserts no write requests and unchanged fixture files.</p>
+<pre><code>npm install --prefix .cache/browser-test --no-save playwright-core
+python3 scripts/docs-demo.py --state-file .local/docs-capture-state.json</code></pre>
+<p>In a second terminal:</p>
+<pre><code>CHROMIUM_BIN=/usr/bin/chromium \
+  node scripts/capture-docs.cjs --state .local/docs-capture-state.json</code></pre>
+<p>Stop the demo with Ctrl+C afterwards. See <a href="screenshots.md">the capture guide</a> for environment overrides and alternate output locations.</p>
+<h2 id="site">Build and check this site</h2>
+<p>The <a href="index.html#demo">captioned demo recording</a> shows search, editing, a confirmed rename, and Undo in a disposable fixture. Its capture helper checks the changed and restored domains through real Caddy requests. MP4 and WebM playback and caption loading are checked in the docs browser verifier. See <a href="screenshots.md">media provenance and reproduction</a>.</p>
+<pre><code>python3 scripts/build-docs.py
+python3 scripts/serve-docs.py --port 18084
+# In another terminal:
+node scripts/verify-docs-site.cjs --url http://127.0.0.1:18084/</code></pre>
+<p>The builder uses only Python’s standard library and emits static files to <code>.local/docs-site</code>. It validates local HTML links, anchors, and duplicate IDs. The browser check additionally requires Chromium and playwright-core. The static artifact uses relative URLs and can be hosted under a repository subpath.</p>
+<h2 id="performance">Performance measurements</h2>
+<p>The previous performance pass measured medians of three 300 ms runs on an Intel i9-13900HK with <code>GOMAXPROCS=4</code>, 10 routes, a warm file cache, and tailnet detection disabled.</p>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>Before → after</th><th>Measured change</th></tr></thead><tbody><tr><td>Directory GET handler</td><td>337.4 → 125.4 µs</td><td>2.69× faster</td></tr><tr><td>Directory HEAD handler</td><td>321.4 → 12.4 µs</td><td>25.99× faster</td></tr><tr><td>Editable config generation</td><td>361.9 → 59.6 µs</td><td>6.07× faster</td></tr></tbody></table></div>
+<p>These are Go microbenchmarks of control operations, not browser load times or application proxy throughput. No performance benchmark was rerun just to build these docs. Read <a href="performance.md">the complete methodology and results</a>.</p>
+<pre><code>GOMAXPROCS=4 go test -run '^$' \
+  -bench 'Benchmark(Directory|CaddyConfig)' \
+  -benchmem -benchtime=300ms -count=3</code></pre>
+
+<nav class="page-nav" aria-label="Adjacent pages"><a href="architecture.html"><span>Previous</span>How it works <span aria-hidden="true">↗</span></a><a href="review.html"><span>Next</span>Code review <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#status">Verification snapshot</a><a href="#examples">Rerun working examples</a><a href="#tests">Run the application suite</a><a href="#screenshots">Reproduce the screenshots</a><a href="#site">Build and check this site</a><a href="#performance">Performance measurements</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/verification.html">View published HTML ↗</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
+<div id="copy-status" class="sr-only" role="status"></div></body></html>

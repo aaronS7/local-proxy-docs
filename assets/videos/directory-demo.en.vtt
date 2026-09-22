@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.502
+The directory pairs friendly domains with their original localhost ports.
+
+00:00:03.502 --> 00:00:06.973
+Search by domain or port. Here, filter the list to the API.
+
+00:00:06.973 --> 00:00:10.140
+Edit app.test and type a memorable name: storefront.
+
+00:00:10.140 --> 00:00:14.705
+Review the old and new domains before confirming the change.
+
+00:00:14.705 --> 00:00:19.247
+Saved. Caddy now routes storefront.test to the same app; the project file stays unchanged.
+
+00:00:19.247 --> 00:00:23.751
+Undo restores app.test and its route. No project configuration edit is needed.

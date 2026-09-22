@@ -1,0 +1,85 @@
+{
+  "verified_at": "2026-09-22T06:02:04.645117+00:00",
+  "checks": [
+    {
+      "check": "YAML names and original localhost ports",
+      "passed": true
+    },
+    {
+      "check": "HTTP app routing and request preservation",
+      "passed": true
+    },
+    {
+      "check": "HTTP api routing and request preservation",
+      "passed": true
+    },
+    {
+      "check": "HTTPS verifies the generated CA and app.dev.test hostname",
+      "passed": true
+    },
+    {
+      "check": "Unknown .dev.test hostname and deep path show directory",
+      "passed": true
+    },
+    {
+      "check": "Reserved home.dev.test opens directory",
+      "passed": true
+    },
+    {
+      "check": "Application 404 passes through",
+      "passed": true
+    },
+    {
+      "check": "Explicit JSON selection works with both file formats present",
+      "passed": true
+    },
+    {
+      "check": "Selecting JSON preserves the existing YAML project file",
+      "passed": true
+    },
+    {
+      "check": "CLI override survives reload and routes immediately",
+      "passed": true
+    },
+    {
+      "check": "CLI commands preserve the JSON project file",
+      "passed": true
+    },
+    {
+      "check": "Editor API returns current registry",
+      "passed": true
+    },
+    {
+      "check": "Editor rename succeeds with matching revision and CSRF token",
+      "passed": true
+    },
+    {
+      "check": "Editor success means the new Caddy route is active",
+      "passed": true
+    },
+    {
+      "check": "Stale editor revision is rejected",
+      "passed": true
+    },
+    {
+      "check": "Editor leaves project map unchanged",
+      "passed": true
+    },
+    {
+      "check": "Editor can rename the app back",
+      "passed": true
+    },
+    {
+      "check": "Restored name reaches the original app",
+      "passed": true
+    },
+    {
+      "check": "Demo tears down child processes and temporary files",
+      "passed": true
+    }
+  ],
+  "passed": 19,
+  "failed": 0,
+  "suffix": "dev.test",
+  "scope": "Isolated loopback fixtures and real Caddy; no system DNS/trust or live routes changed."
+}
