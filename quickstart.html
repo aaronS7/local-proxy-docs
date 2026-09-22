@@ -8,9 +8,9 @@
 <button class="search-trigger" type="button" aria-haspopup="dialog"><span>Search documentation</span><kbd>Ctrl K</kbd></button>
 <a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
 <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
-<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html" aria-current="page">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a><p class="nav-label">PROJECT</p><a href="verification.html">Verification</a><a href="review.html">Code review</a><a href="troubleshooting.html">Troubleshooting</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
+<div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html" aria-current="page">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><a href="troubleshooting.html">Troubleshooting</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
 <main id="main"><div class="eyebrow">START HERE <span>/</span> Quickstart</div><h1>From ports to names.</h1><p class="lead">Run a complete, isolated demo before changing your machine.</p><h2 id="prerequisites">1. Build the CLI</h2>
-<p>Use Linux, Go 1.24 or newer, Python 3.10 or newer, curl, and a Caddy executable. Caddy 2.11.4 is the version tested for this project. Install Caddy using its <a href="https://caddyserver.com/docs/install">official installation guide</a>; place the executable at <code>bin/caddy</code>, on PATH, or set <code>CADDY_BIN</code>.</p>
+<p>Use Linux, Go 1.24 or newer, Python 3.10 or newer, curl, and Caddy 2.11.4. Install Caddy using its <a href="https://caddyserver.com/docs/install">official installation guide</a>; place the executable at <code>bin/caddy</code>, on PATH, or set <code>CADDY_BIN</code>.</p>
 <pre><code>git clone https://github.com/aaronS7/local-proxy.git
 cd local-proxy
 go build -o bin/localproxy .</code></pre>
@@ -35,7 +35,7 @@ curl --noproxy '*' --fail \
 curl --noproxy '*' --fail --cacert "$CA_FILE" \
   --resolve "app.dev.test:$HTTPS_PORT:127.0.0.1" \
   "https://app.dev.test:$HTTPS_PORT/"</code></pre>
-<p>Both requests reach the app fixture. The second verifies the certificate chain and hostname against the demo’s CA. There is no <code>--insecure</code> step.</p>
+<p>Both requests reach the demo app. The HTTPS request uses the demo’s local certificate authority.</p>
 <h2 id="rename">4. Make the name yours</h2>
 <p>In the directory, choose <strong>Edit</strong> next to <code>app.dev.test</code>, enter <code>studio</code>, choose <strong>Save</strong>, then confirm. The port stays the same. Use <strong>Undo</strong> to restore the previous name.</p>
 <p>You can also rename from the CLI. Run these before the browser rename, or undo it first:</p>
@@ -44,12 +44,9 @@ curl --noproxy '*' --fail --cacert "$CA_FILE" \
 ./bin/localproxy -config "$REGISTRY" reload
 ./bin/localproxy -config "$REGISTRY" list</code></pre>
 <p>The listing keeps <code>studio.dev.test</code> after reload even though the project map still calls that port <code>app</code>. CLI and UI edits persist as overrides.</p>
-<h2 id="automate">5. Verify the whole example</h2>
-<pre><code>python3 scripts/verify-docs-example.py</code></pre>
-<p>The verifier starts its own demo, checks real proxy responses and HTTPS, exercises project files and edits, and tears down its temporary services. Read <a href="verification.html">Verification</a> for the exact scope and evidence.</p>
 <p>Next, set up a <a href="configuration.html">project map</a> for your own apps and configure <a href="dns.html">DNS and HTTPS</a> for normal browser URLs.</p>
 
-<nav class="page-nav" aria-label="Adjacent pages"><a href="index.html"><span>Previous</span>Overview <span aria-hidden="true">↗</span></a><a href="configuration.html"><span>Next</span>Configuration <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation <span>Built from source. Verified with real apps.</span></footer></main>
-<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a><a href="#automate">5. Verify the whole example</a></nav><a class="source-link" href="https://github.com/aaronS7/local-proxy-docs/blob/main/quickstart.html">View published HTML ↗</a></aside></div>
+<nav class="page-nav" aria-label="Adjacent pages"><a href="index.html"><span>Previous</span>Overview <span aria-hidden="true">↗</span></a><a href="configuration.html"><span>Next</span>Configuration <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation</footer></main>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a></nav></aside></div>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
 <div id="copy-status" class="sr-only" role="status"></div></body></html>
