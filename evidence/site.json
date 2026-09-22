@@ -1,5 +1,5 @@
 {
-  "url": "http://127.0.0.1:18084/",
+  "url": "https://aarons7.github.io/local-proxy-docs/",
   "pages": [
     {
       "page": "index.html",
@@ -71,6 +71,7 @@
   "checks": [
     "desktop and mobile layouts",
     "image loading and alt text",
+    "MP4 and WebM playback with captions",
     "page headings and current navigation",
     "keyboard search",
     "no-results search",
