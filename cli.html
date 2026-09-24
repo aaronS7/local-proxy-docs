@@ -106,7 +106,7 @@
 <p><code>ui --tailnet</code> currently has no effect. Persist the option with <code>reload --tailnet</code> or <code>generate --tailnet</code> first. <code>-file</code> is also not applied by the early UI dispatch; establish the selected map with a generating command before starting the UI.</p>
 <h2 id="files">Files and defaults</h2>
 <div class="table-wrap"><table><thead><tr><th>Setting</th><th>Default</th></tr></thead><tbody><tr><td>Registry</td><td><code>routes.json</code> in the current directory</td></tr><tr><td>Suffix</td><td><code>test</code></td></tr><tr><td>HTTP / HTTPS ports</td><td><code>80</code> / <code>443</code></td></tr><tr><td>Caddy admin endpoint</td><td><code>127.0.0.1:2021</code></td></tr><tr><td>Generated JSON</td><td><code>.local/caddy.json</code>, alongside the registry</td></tr><tr><td>Local CA data</td><td><code>.local/caddy-data</code>, alongside the registry</td></tr><tr><td>Registry lock</td><td><code>.local/registry.lock</code>, alongside the registry</td></tr></tbody></table></div>
-<p>The executable lookup order is <code>CADDY_BIN</code>, a <code>caddy</code> executable on PATH, then <code>caddy</code> beside the localproxy binary.</p>
+<p>Caddy is embedded and selected by default. Set <code>CADDY_BIN</code> explicitly to use an external engine; PATH and adjacent Caddy installations are not selected automatically. Use <code>localproxy caddy version</code>, <code>localproxy caddy list-modules</code>, or <code>localproxy caddy validate --config .local/caddy.json</code> to inspect the embedded engine. Caddy self-update commands are disabled; update Local Proxy to update its embedded Caddy.</p>
 <h2 id="examples">Common sequences</h2>
 <pre><code>./bin/localproxy add app 3000
 ./bin/localproxy add api 8080
