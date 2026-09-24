@@ -25,7 +25,7 @@ api: 8080</code></pre>
 <div class="table-wrap"><table><thead><tr><th>Priority</th><th>Name source</th><th>How it changes</th></tr></thead><tbody><tr><td>1</td><td>CLI / UI override</td><td><code>add</code>, <code>rename</code>, or browser edit</td></tr><tr><td>2</td><td>Project file</td><td>Edit the map and run <code>reload</code></td></tr><tr><td>3</td><td>Discovery</td><td>Random name when a new HTTP port is found</td></tr></tbody></table></div>
 <pre><code>./bin/localproxy rename app studio
 ./bin/localproxy reload
-# studio.test keeps its name, even if the map still says app.</code></pre>
+# studio.localhost keeps its name, even if the map still says app.</code></pre>
 <p>The project map is never rewritten. <code>remove</code> records a suppressed port, so discovery and the map do not immediately restore it. Use <code>add &lt;name&gt; &lt;port&gt;</code> to restore it. Deleting a map entry removes that file-managed route on reload, while overrides and unrelated discovered routes remain.</p>
 <p>There is no reset-override command yet. To return a route to its file default, stop concurrent writers, remove that route’s <code>name_source: "override"</code> field in the registry, and reload.</p>
 <h2 id="selection">Which file gets read?</h2>

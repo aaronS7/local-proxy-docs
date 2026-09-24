@@ -24,6 +24,14 @@ install -m 755 localproxy "$HOME/.local/bin/localproxy"
 <p>Add <code>~/.local/bin</code> to PATH if needed. On Windows, put <code>localproxy.exe</code> in a directory on your user PATH, or run <code>.\localproxy.exe --version</code> from its directory in PowerShell. Binaries are unsigned and macOS downloads are not notarized; macOS may require approval in Privacy &amp; Security after you review the download.</p>
 <p>Run <code>localproxy caddy version</code> to inspect the embedded engine. DNS and certificate trust remain machine-specific. Automatic discovery uses <code>ss</code> from iproute2 on Linux, <code>lsof</code> on macOS, and Windows PowerShell’s <code>Get-NetTCPConnection</code> on Windows. Optional Tailscale links require its CLI on PATH.</p>
 <p>Create a <a href="configuration.html">project map</a>, configure <a href="dns.html">DNS and HTTPS</a>, and start your proxy. Releases contain no machine configuration. Each automatic build identifies its source commit in the release page and <code>--version</code>.</p>
+<h2 id="setup">Set up and start</h2>
+<p>Create <code>proxy.yaml</code> in your project:</p>
+<pre><code>app: 3000
+api: 8080</code></pre>
+<pre><code>localproxy setup
+localproxy up</code></pre>
+<p>Setup requests administrator access once for certificate trust and Linux port permissions. New registries use <code>.localhost</code>, which modern browsers resolve automatically. Open <code>https://home.localhost/</code> for the editor and <code>https://app.localhost/</code> for your running app. Keep <code>up</code> running; Ctrl-C stops the proxy and editor together.</p>
+<p>Use <code>localproxy doctor --json</code> to inspect DNS, HTTP and system HTTPS trust. Existing registries keep their suffix. To opt into <code>.test</code> with a new registry, use <code>setup --suffix test</code>. See <a href="dns.html">DNS and HTTPS</a> for platform requirements, previews and removal.</p>
 <h2 id="source-demo">Try the source demo on Linux</h2>
 <p>The following walkthrough uses the source checkout and Linux shell commands.</p>
 <h2 id="prerequisites">1. Build the CLI</h2>
@@ -38,7 +46,7 @@ go build -o bin/localproxy .</code></pre>
   --state-file .local/docs-demo.json</code></pre>
 <p>Keep this terminal open. The script launches two small HTTP apps, Caddy, and the editor. It chooses unused high ports, creates a temporary registry and project map, and prints a directory URL you can open directly. Press Ctrl+C to stop the processes and remove temporary files.</p>
 <p>Open the printed <code>directory_url</code>. You will see <code>app.dev.test</code> and <code>api.dev.test</code>, their localhost ports, and their editing controls. Domain links require local DNS; the direct directory URL works immediately.</p>
-<div class="callout"><p>The demo uses <code>.dev.test</code> so strict OpenSSL clients can validate its wildcard certificate. The application default remains <code>.test</code>. See <a href="dns.html#compatibility">certificate compatibility</a>.</p></div>
+<div class="callout"><p>The isolated demo explicitly uses <code>.dev.test</code>. New application configurations default to <code>.localhost</code>; both use exact-name certificates.</p></div>
 <h2 id="requests">3. Send a request through Caddy</h2>
 <p>In another terminal, read the dynamically assigned ports. <code>--resolve</code> directs only this curl request to loopback; it does not change your machine’s resolver.</p>
 <pre><code>HTTP_PORT=$(python3 -c 'import json; print(json.load(open(".local/docs-demo.json"))["ports"]["http"])')
@@ -64,6 +72,6 @@ curl --noproxy '*' --fail --cacert "$CA_FILE" \
 <p>Next, set up a <a href="configuration.html">project map</a> for your own apps and configure <a href="dns.html">DNS and HTTPS</a> for normal browser URLs.</p>
 
 <nav class="page-nav" aria-label="Adjacent pages"><a href="index.html"><span>Previous</span>Overview <span aria-hidden="true">↗</span></a><a href="configuration.html"><span>Next</span>Configuration <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation</footer></main>
-<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#download">Download a binary</a><a href="#source-demo">Try the source demo on Linux</a><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a></nav></aside></div>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#download">Download a binary</a><a href="#setup">Set up and start</a><a href="#source-demo">Try the source demo on Linux</a><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a></nav></aside></div>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
 <div id="copy-status" class="sr-only" role="status"></div></body></html>

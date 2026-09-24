@@ -10,18 +10,17 @@
 <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
 <div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html" aria-current="page">Overview</a><a href="quickstart.html">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><a href="troubleshooting.html">Troubleshooting</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
 <main id="main"><div class="eyebrow">START HERE <span>/</span> Overview</div><h1>Local names. Less friction.</h1><p class="lead">A small Go CLI, Caddy routing, and one directory for every local app.</p><div class="actions"><a class="button primary" href="#demo">Watch the demo <span aria-hidden="true">→</span></a><a class="button" href="quickstart.html">Read the quickstart</a></div>
-<div class="routing" role="img" aria-label="app.test routes through Caddy to localhost port 3000. Unknown names under .test open the directory."><div class="routing-caption">A NAME FOR EVERY LOCAL APP</div><div class="route-flow"><span class="route-node">app.test</span><span class="route-arrow">→</span><span class="route-node accent">Caddy</span><span class="route-arrow">→</span><span class="route-node">localhost:3000</span></div><small>Unregistered local name? Open the app directory.</small></div>
+<div class="routing" role="img" aria-label="app.localhost routes through Caddy to localhost port 3000. Unknown names under .localhost open the directory."><div class="routing-caption">A NAME FOR EVERY LOCAL APP</div><div class="route-flow"><span class="route-node">app.localhost</span><span class="route-arrow">→</span><span class="route-node accent">Caddy</span><span class="route-arrow">→</span><span class="route-node">localhost:3000</span></div><small>Unregistered local name? Open the app directory.</small></div>
 <h2 id="overview">Keep the port. Give it a name.</h2>
 <p>Localproxy is a Go CLI that generates and reloads Caddy routes. Register a name yourself, load names from a project file, or discover listening HTTP apps and give them random names. The directory keeps the registered domain and original localhost address together.</p>
 <pre><code># proxy.yaml
 app: 3000
 api: 8080</code></pre>
-<p>These register <code>app.test</code> and <code>api.test</code>. Browser URLs also need local DNS and certificate trust, and HTTPS depends on the <a href="dns.html#compatibility">client’s wildcard compatibility</a>. The reserved name <code>home.test</code> opens the directory. A configurable suffix lets you use names such as <code>app.dev.test</code>.</p>
-<div class="callout"><p>Start with the isolated demo: it uses temporary files and high ports, and needs no DNS changes or system certificate installation. The <a href="dns.html#compatibility">TLS compatibility note</a> explains why its HTTPS walkthrough uses <code>.dev.test</code>.</p></div>
+<p>Run <code>localproxy setup</code>, then <code>localproxy up</code>. The apps get <code>app.localhost</code> and <code>api.localhost</code>; <code>home.localhost</code> opens the editable directory. Caddy is embedded, and modern browsers resolve these local names without DNS setup. <code>.test</code> remains optional.</p>
 <h2 id="explore">Build your local workflow</h2>
 <div class="cards"><a class="card" href="configuration.html"><span class="card-number">01 / CONFIGURE</span><strong>Names as project data ↗</strong><p>YAML or JSON defaults, with persistent CLI and browser overrides.</p></a><a class="card" href="directory.html"><span class="card-number">02 / DISCOVER</span><strong>An editable directory ↗</strong><p>Search, copy an address, rename with confirmation, and undo.</p></a><a class="card" href="tailnet.html"><span class="card-number">03 / CONNECT</span><strong>See your Tailscale URLs ↗</strong><p>Existing hostname and IP links, with availability made explicit.</p></a><a class="card" href="cli.html"><span class="card-number">04 / AUTOMATE</span><strong>Use the CLI ↗</strong><p>Look up domains, export configuration, and use JSON or YAML in your scripts.</p></a></div>
 <h2 id="preview">A directory you can work from</h2>
-<figure><a href="assets/screenshots/directory-desktop.png"><img src="assets/screenshots/directory-desktop.png" width="1440" height="960" alt="Localproxy directory showing api.test and app.test with localhost links and Edit buttons" loading="lazy"></a><figcaption>Find each app by its domain or original localhost address.</figcaption></figure>
+<figure><a href="assets/screenshots/directory-desktop.png"><img src="assets/screenshots/directory-desktop.png" width="1440" height="960" alt="Localproxy directory showing api.test and app.test with localhost links and Edit buttons" loading="lazy"></a><figcaption>Find each app by its domain or original localhost address. This example uses the optional .test suffix.</figcaption></figure>
 <h2 id="demo">See a name change, end to end</h2>
 <p>Search for an app, edit its name, confirm the change, and use Undo to restore it. The localhost port stays the same throughout.</p>
 <figure class="demo-video"><video controls playsinline preload="none" poster="assets/videos/directory-demo-poster.png" width="1280" height="800" aria-label="Local Proxy demo: search, rename an app with confirmation, and undo the change">
@@ -34,13 +33,13 @@ api: 8080</code></pre>
 <h2 id="cli-workflow">Use the same names in your tools</h2>
 <pre><code>localproxy add app 3000
 localproxy lookup http://localhost:3000
-# app.test
+# app.localhost
 localproxy lookup 3000 --json
 localproxy config export --format yaml</code></pre>
 <p>Use JSON or YAML in scripts, look up a domain from a localhost URL, and export the full configuration. Names from project files remain defaults until you override them.</p>
 <h2 id="scope">What runs where</h2>
 <p>Caddy handles application traffic. The Go CLI manages the registry and configuration; an optional Go HTTP server provides the editable directory. Generated app listeners bind to loopback. Tailscale integration displays existing access paths and does not expose localhost apps.</p>
-<p>The current implementation is Linux-oriented: discovery uses <code>ss</code>, registry locking uses Unix file locks, and the machine setup script targets Arch/Omarchy.</p>
+<p>Linux, macOS, and Windows share the same CLI. Discovery uses each platform’s native listener tools; registry locking and machine setup use native OS facilities.</p>
 
 <p>These documentation pages and demo media are public. The application source repository is currently private; building and running the CLI requires repository access. The <a href="quickstart.html">quickstart</a> documents the workflow for people with access.</p>
 
