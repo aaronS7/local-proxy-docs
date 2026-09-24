@@ -9,8 +9,25 @@
 <a class="repo-link" href="https://github.com/aaronS7/local-proxy-docs">Docs on GitHub <span aria-hidden="true">↗</span></a>
 <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar">Menu</button></header>
 <div class="layout"><aside id="sidebar"><nav aria-label="Documentation"><p class="nav-label">START HERE</p><a href="index.html">Overview</a><a href="quickstart.html" aria-current="page">Quickstart</a><p class="nav-label">GUIDES</p><a href="configuration.html">Configuration</a><a href="directory.html">Discovery & editing</a><a href="tailnet.html">Tailscale links</a><a href="dns.html">DNS & HTTPS</a><a href="troubleshooting.html">Troubleshooting</a><p class="nav-label">REFERENCE</p><a href="cli.html">CLI reference</a><a href="architecture.html">How it works</a></nav><div class="sidebar-note"><span class="dot"></span> Local development<br><small>Go + Caddy · Linux</small></div></aside>
-<main id="main"><div class="eyebrow">START HERE <span>/</span> Quickstart</div><h1>From ports to names.</h1><p class="lead">Run a complete, isolated demo before changing your machine.</p><h2 id="prerequisites">1. Build the CLI</h2>
-<p>Use Linux, Go 1.24 or newer, Python 3.10 or newer, curl, and Caddy 2.11.4. Install Caddy using its <a href="https://caddyserver.com/docs/install">official installation guide</a>; place the executable at <code>bin/caddy</code>, on PATH, or set <code>CADDY_BIN</code>.</p>
+<main id="main"><div class="eyebrow">START HERE <span>/</span> Quickstart</div><h1>From ports to names.</h1><p class="lead">Run a complete, isolated demo before changing your machine.</p><h2 id="download">Download a binary</h2>
+<p><a href="https://github.com/aaronS7/local-proxy/releases">GitHub releases</a> include Linux, macOS, and Windows binaries for x86-64 and ARM64. The repository is private, so sign in with an account that has access. Caddy is a separate dependency; Go is not needed to use a downloaded binary.</p>
+<div class="table-wrap"><table><thead><tr><th>Machine</th><th>Archive suffix</th></tr></thead><tbody><tr><td>Linux x86-64 / ARM64</td><td><code>linux_amd64.tar.gz</code> / <code>linux_arm64.tar.gz</code></td></tr><tr><td>macOS Intel / Apple Silicon</td><td><code>darwin_amd64.tar.gz</code> / <code>darwin_arm64.tar.gz</code></td></tr><tr><td>Windows x86-64 / ARM64</td><td><code>windows_amd64.zip</code> / <code>windows_arm64.zip</code></td></tr></tbody></table></div>
+<p>For example, download the latest Linux x86-64 archive with GitHub CLI:</p>
+<pre><code>gh auth login
+gh release download --repo aaronS7/local-proxy \
+  --pattern '*linux_amd64.tar.gz' --pattern SHA256SUMS</code></pre>
+<p>Choose the pattern for your machine. Compare the archive’s SHA-256 hash with its entry in <code>SHA256SUMS</code>: use <code>sha256sum ARCHIVE</code> on Linux, <code>shasum -a 256 ARCHIVE</code> on macOS, or <code>Get-FileHash ARCHIVE -Algorithm SHA256</code> in PowerShell.</p>
+<p>Extract the archive. On Linux or macOS, install the binary into your user bin directory:</p>
+<pre><code>mkdir -p "$HOME/.local/bin"
+install -m 755 localproxy "$HOME/.local/bin/localproxy"
+"$HOME/.local/bin/localproxy" --version</code></pre>
+<p>Add <code>~/.local/bin</code> to PATH if needed. On Windows, put <code>localproxy.exe</code> in a directory on your user PATH, or run <code>.\localproxy.exe --version</code> from its directory in PowerShell. Binaries are unsigned and macOS downloads are not notarized; macOS may require approval in Privacy &amp; Security after you review the download.</p>
+<p>Install <a href="https://caddyserver.com/docs/install">Caddy</a> on PATH, next to Local Proxy, or set <code>CADDY_BIN</code> to its full path. Automatic discovery uses <code>ss</code> from iproute2 on Linux, <code>lsof</code> on macOS, and Windows PowerShell’s <code>Get-NetTCPConnection</code> on Windows. Optional Tailscale links require its CLI on PATH.</p>
+<p>Create a <a href="configuration.html">project map</a>, configure <a href="dns.html">DNS and HTTPS</a>, and start your proxy. Releases contain no machine configuration. Each automatic build identifies its source commit in the release page and <code>--version</code>.</p>
+<h2 id="source-demo">Try the source demo on Linux</h2>
+<p>The following walkthrough uses the source checkout and Linux shell commands.</p>
+<h2 id="prerequisites">1. Build the CLI</h2>
+<p>Use Linux, Go 1.26 or newer, Python 3.10 or newer, curl, and Caddy 2.11.4. Install Caddy using its <a href="https://caddyserver.com/docs/install">official installation guide</a>; place the executable at <code>bin/caddy</code>, on PATH, or set <code>CADDY_BIN</code>.</p>
 <pre><code>git clone https://github.com/aaronS7/local-proxy.git
 cd local-proxy
 go build -o bin/localproxy .</code></pre>
@@ -47,6 +64,6 @@ curl --noproxy '*' --fail --cacert "$CA_FILE" \
 <p>Next, set up a <a href="configuration.html">project map</a> for your own apps and configure <a href="dns.html">DNS and HTTPS</a> for normal browser URLs.</p>
 
 <nav class="page-nav" aria-label="Adjacent pages"><a href="index.html"><span>Previous</span>Overview <span aria-hidden="true">↗</span></a><a href="configuration.html"><span>Next</span>Configuration <span aria-hidden="true">↗</span></a></nav><footer>Localproxy documentation</footer></main>
-<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a></nav></aside></div>
+<aside class="toc"><p>ON THIS PAGE</p><nav aria-label="On this page"><a href="#download">Download a binary</a><a href="#source-demo">Try the source demo on Linux</a><a href="#prerequisites">1. Build the CLI</a><a href="#demo">2. Run the isolated demo</a><a href="#requests">3. Send a request through Caddy</a><a href="#rename">4. Make the name yours</a></nav></aside></div>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><label id="search-title" for="docs-search">Search the docs</label><button id="search-close" type="button" aria-label="Close search">Esc</button></div><input id="docs-search" type="search" placeholder="Try: rename, YAML, HTTPS…" autocomplete="off"><p id="search-status" role="status"></p><div id="search-results"></div></dialog>
 <div id="copy-status" class="sr-only" role="status"></div></body></html>

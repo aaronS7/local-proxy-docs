@@ -14,6 +14,7 @@
 <p>Examples use <code>./bin/localproxy</code> when running from a source checkout. <code>-config</code> and <code>-file</code> go before the command. <code>--tailnet</code> is normalized so it can appear before or after a command; use <code>--tailnet=false</code> to disable it.</p>
 <h2 id="commands">Commands</h2>
 <div class="table-wrap"><table><thead><tr><th>Command</th><th>Effect</th></tr></thead><tbody>
+<tr><td><code>--version</code></td><td>Print the build version, source commit, and operating system/CPU.</td></tr>
 <tr><td><code>add &lt;name&gt; &lt;port&gt;</code></td><td>Register or update a manual name; replace another name for that port and clear its suppression.</td></tr>
 <tr><td><code>rename &lt;old&gt; &lt;new&gt;</code></td><td>Persist an override for an existing route without changing its port.</td></tr>
 <tr><td><code>remove &lt;name&gt;</code></td><td>Remove the registration and suppress its port from maps and discovery.</td></tr>
@@ -70,7 +71,7 @@
 </tbody></table></div>
 <p>The export contains the complete effective registry after project-map merging: listener ports, suffix, route names and sources, Host overrides, suppressed ports, selected project file, directory backend, and the persisted tailnet setting. Routes are sorted by domain and suppressed ports numerically. Optional default fields are omitted, as in the registry schema; an empty route list is <code>[]</code>.</p>
 <p>Export reads configuration without contacting Caddy, probing apps or Tailscale, or writing runtime state. It does not prove that Caddy has applied the configuration. JSON can be read again with <code>-config</code>; YAML has matching field names for other tools, but <code>-config</code> still accepts only JSON. This full configuration is different from a flat <code>proxy.yaml</code> project map. The selected <code>project_file</code> path is retained; transferring the export to another machine also requires handling that dependency.</p>
-<p>File output leaves stdout empty, replaces regular files atomically, preserves existing permissions, and creates new files with mode <code>0600</code>. Parent directories must exist. Export refuses to overwrite the input registry or selected project map, including file aliases, and rejects symlink or nonregular destinations. Invalid configuration or options leave existing output untouched; errors go to stderr and exit nonzero.</p>
+<p>File output leaves stdout empty, replaces regular files atomically, preserves existing permissions, and creates new Unix files with mode <code>0600</code>. On Windows, files inherit directory ACLs. Parent directories must exist. Export refuses to overwrite the input registry or selected project map, including file aliases, and rejects symlink or nonregular destinations. Invalid configuration or options leave existing output untouched; errors go to stderr and exit nonzero.</p>
 <pre><code>./bin/localproxy -config /path/to/routes.json -file /path/to/proxy.yaml \
   config export --format yaml --output snapshot.yaml
 ./bin/localproxy config export --yaml &gt; snapshot.yaml</code></pre>
